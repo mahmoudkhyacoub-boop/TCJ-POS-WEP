@@ -1,0 +1,44 @@
+name: Build Trend Center Jordan V118 MoM Charts
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip
+          pip install customtkinter pillow pywin32 pandas openpyxl arabic-reshaper python-bidi pyautogui pyinstaller
+
+      - name: Verify source and assets
+        shell: powershell
+        run: |
+          if (!(Test-Path "main.py")) { throw "main.py is missing" }
+          if (!(Test-Path "icon.ico")) { throw "icon.ico is missing" }
+          if (!(Test-Path "icon.png")) { throw "icon.png is missing" }
+          python -m py_compile main.py
+
+      - name: Build V118 EXE
+        shell: powershell
+        run: pyinstaller --noconfirm --clean --onefile --windowed --add-data "icon.png;." --add-data "icon.ico;." --icon "icon.ico" --name "Trend_Center_Jordan_V118_MoM_Charts" main.py
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trend_Center_Jordan_V118_MoM_Charts_EXE
+          path: dist/Trend_Center_Jordan_V118_MoM_Charts.exe
